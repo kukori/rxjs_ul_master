@@ -1,5 +1,5 @@
-import { interval, Subject, share } from "rxjs";
-import { tap } from 'rxjs/operators';
+import { interval, Subject, share, BehaviorSubject, ReplaySubject, AsyncSubject } from "rxjs";
+import { tap, scan, pluck, distinctUntilKeyChanged } from 'rxjs/operators';
 import { loadingService } from './loadingService'
 
 // SUBJECT:
@@ -10,7 +10,10 @@ const observer = {
     complete: () => console.log('completed'),
 }
 
-const subject = new Subject();
+// const subject = new Subject();
+// With behaviorSubject all the emitted values get to the observers
+// so not just the ones emitted after the subscription
+// const subject = new BehaviorSubject('Hello');
 
 // const subscription = subject.subscribe(observer);
 
@@ -72,5 +75,74 @@ setTimeout(() => {
    subTwo.unsubscribe();
 }, 3000)
 
+// LAB2 application state
+export class ObservableStore {
+    private store: BehaviorSubject<Object>;
+    private stateUpdates: Subject<Object>;
 
-// BEHAVIOURSUBJECT:
+    constructor(initialState: Object) {
+        this.store = new BehaviorSubject(
+            initialState
+        );
+
+        this.stateUpdates = new Subject();
+        this.stateUpdates.pipe(
+            scan((state, current) => {
+                return { ...state, ...current }
+            }, initialState)
+        ).subscribe(this.store)
+    }
+
+    updateState(stateUpdate: Object) {
+        this.stateUpdates.next(stateUpdate);
+    }
+
+    selectState(stateKey: any) {
+        return this.store.pipe(
+            distinctUntilKeyChanged(stateKey),
+            pluck(stateKey)
+        )
+    }
+
+    stateChanges() {
+        return this.store.asObservable();
+    }
+}
+
+const store = new ObservableStore({
+    user: 'Brian',
+    isAuthenticated: false
+})
+
+store.selectState('user').subscribe(console.log);
+
+
+store.updateState({
+    user: 'joe'
+})
+
+
+// REPLAYSUBJECT:
+const replaySubject = new ReplaySubject(2);
+
+replaySubject.next('Hello');
+replaySubject.next('Goodbye!');
+replaySubject.next('World!');
+
+// const subscription = replaySubject.subscribe(observer);
+
+// SHAREREPLAY:
+// shareReplay turns a unicast observable into multicasted observable, utilizing a ReplaySubject behind the scenes.
+
+// ASYNCSUBJECT:
+//  AsyncSubject's only emit the final value on completion.
+const asyncSubject = new AsyncSubject();
+
+const subscription = asyncSubject.subscribe(observer);
+const secondSubscription = asyncSubject.subscribe(observer);
+
+asyncSubject.next('Hello');
+asyncSubject.next('World');
+asyncSubject.next('Goodbye!');
+asyncSubject.next('utolso!');
+asyncSubject.complete();
