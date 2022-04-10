@@ -106,7 +106,9 @@ describe("Marble testing rxjs", () => {
                 map(value => `${value + 1}sec`),
             );
             const expected = '1s a 999ms b 999ms c';
+            // the expected has to match the values emmitted before subscription
             const unsubscribe = '4s !'
+
             expectObservable(source, unsubscribe).toBe(expected, { a: '1sec', b: '2sec', c: '3sec' });
         })
     });
