@@ -1,6 +1,6 @@
 import { TestScheduler } from 'rxjs/testing';
 import { map } from 'rxjs/operators';
-import { concat, take, from, delay } from 'rxjs';
+import { concat, take, from, delay, of, catchError, interval } from 'rxjs';
 
 describe("Marble testing rxjs", () => {
     let testScheduler: TestScheduler;
@@ -81,6 +81,33 @@ describe("Marble testing rxjs", () => {
             const expected = '200ms (abcde|)';
 
             expectObservable(final).toBe(expected, { a: 1, b: 2, c: 3, d: 4, e: 5 });
+        })
+    });
+
+    it('should let you test error and error messages', () => {
+        testScheduler.run(helpers => {
+            const { expectObservable } = helpers;
+            const source = of({ firstName: 'Brian', lastName: 'Smith'}, null).pipe(
+                map(object => `${object.firstName} ${object.lastName}`),
+                catchError(() => {
+                    throw { message: 'Invalid user!'};
+                })  
+            );
+            // # represents the error
+            const expected = '(a#)'
+            expectObservable(source).toBe(expected, { a: 'Brian Smith' }, { message: 'Invalid user!'});
+        })
+    });
+
+    it('should let you test snapshots of streams that do not complete', () => {
+        testScheduler.run(helpers => {
+            const { expectObservable } = helpers;
+            const source = interval(1000).pipe(
+                map(value => `${value + 1}sec`),
+            );
+            const expected = '1s a 999ms b 999ms c';
+            const unsubscribe = '4s !'
+            expectObservable(source, unsubscribe).toBe(expected, { a: '1sec', b: '2sec', c: '3sec' });
         })
     });
 });
