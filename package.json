@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "start": "webpack-dev-server --mode development"
+    "start": "webpack-dev-server --mode development",
+    "test": "jest"
   },
   "author": "Brian Troncone, Ultimate Courses",
   "license": "MIT",
@@ -15,8 +16,15 @@
     "webpack": "^5.71.0"
   },
   "devDependencies": {
+    "@babel/core": "^7.17.9",
+    "@babel/preset-env": "^7.16.11",
+    "@babel/preset-typescript": "^7.16.7",
+    "@types/jest": "^27.4.1",
+    "babel-jest": "^27.5.1",
     "html-loader": "^3.1.0",
     "html-webpack-plugin": "^5.5.0",
+    "jest": "^27.5.1",
+    "ts-jest": "^27.1.4",
     "webpack-cli": "^4.9.2",
     "webpack-dev-server": "^4.7.4"
   }
